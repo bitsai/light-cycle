@@ -18,34 +18,37 @@
 	      VK_DOWN  [ 0  1]
 	      VK_RIGHT [ 1  0]})
 
+(defn point-to-screen-rect [[x y]]
+  (map #(* point-size %) [x y 1 1]))
+
 (defn fill-point [g pt color]
   (let [[x y width height] (point-to-screen-rect pt)]
     (.setColor g color)
     (.fillRect g x y width height)))
 
-(defn paint-cycle [g {:keys [trail color]}]
-  (doseq [point trail]
-    (fill-point g point color)))
+(defn paint-cycles [g cycles]
+  (doseq [{:keys [trail color]} cycles]
+    (doseq [point trail]
+      (fill-point g point color))))
 
-(defn paint-collisions [g p1 p2]
-  (let [p1-pt (first (:trail p1))
-	p2-pt (first (:trail p2))]
-    (if (hit-trails? p1 p2) (fill-point g p1-pt orange))
-    (if (hit-trails? p2 p1) (fill-point g p2-pt orange))))
+(defn paint-hits [g cycles]
+  (doseq [{[pt & _] :trail :as cycle} cycles]
+    (let [other-cycles (disj (set cycles) cycle)]
+      (if (hit-cycle? cycle other-cycles) (fill-point g pt white)))))
 
-(defn game-panel [frame p1 p2]
+(defn game-panel [frame win-fn p1 p2]
   (proxy [JPanel ActionListener KeyListener] []
     (paintComponent [g]
 		    (proxy-super paintComponent g)
-		    (paint-cycle g @p1)
-		    (paint-cycle g @p2)
-		    (paint-collisions g @p1 @p2))
+		    (paint-cycles g [@p1 @p2])
+		    (paint-hits g [@p1 @p2]))
     (actionPerformed [e]
-		     (update-positions p1 p2)
-		     (let [winner (get-winner @p1 @p2)]
-		       (when winner
+		     (remove-dead [p1 p2])
+		     (update-positions [p1 p2])
+		     (let [win-msg (win-fn [@p1 @p2])]
+		       (when win-msg
 			 (reset-game p1 p2)
-			 (JOptionPane/showMessageDialog frame winner)))
+			 (JOptionPane/showMessageDialog frame win-msg)))
 		     (.repaint this))
     (keyPressed [e]
 		(let [p1-dir (p1-dirs (.getKeyCode e))
@@ -59,11 +62,11 @@
     (keyReleased [e])
     (keyTyped [e])))
 
-(defn game []
+(defn game [win-fn]
   (let [p1 (ref (create-p1))
 	p2 (ref (create-p2))
 	frame (JFrame. "Light Cycle")
-	panel (game-panel frame p1 p2)
+	panel (game-panel frame win-fn p1 p2)
 	timer (Timer. turn-millis panel)]
     (doto panel
       (.addKeyListener panel)

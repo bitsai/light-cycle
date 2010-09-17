@@ -1,4 +1,5 @@
 (ns light-cycle
-  (:use [gui]))
+  (:use [gui :only (game)])
+  (:use [win-fns :only (ffa-win-fn)]))
 
-(game)
+(game ffa-win-fn)
