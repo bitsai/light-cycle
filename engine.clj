@@ -20,15 +20,14 @@
    :dir dir
    :color color})
 
-(defn create-p1 []
-  (create-cycle "Player 1" [37 50] [0 -1] yellow))
-
-(defn create-p2 []
-  (create-cycle "Player 2" [37 0] [0 1] blue))
+(defn create-cycles []
+  [(create-cycle "Player 1" [37 50] [0 -1] yellow)
+   (create-cycle "Player 2" [37 0] [0 1] blue)])
 
 (defn move [{:keys [trail dir] :as cycle}]
-  (let [new-pt (add-points dir (first trail))]
-    (assoc cycle :trail (cons new-pt trail))))
+  (let [new-pt (add-points dir (first trail))
+	new-trail (cons new-pt trail)]
+    (assoc cycle :trail new-trail)))
 
 (defn hit-wall? [{[[x y] & _] :trail}]
   (or
@@ -37,16 +36,16 @@
    (> x width)
    (> y height)))
 
-(defn hit-cycle? [{[pt & trail] :trail} other-cycles]
-  (let [other-trails (mapcat :trail other-cycles)
+(defn hit-trail? [{[pt & trail] :trail :as cycle} cycles]
+  (let [other-cycles (disj (set cycles) cycle)
+	other-trails (mapcat :trail other-cycles)
 	trails (concat trail other-trails)]
     (some #(= pt %) trails)))
 
-(defn dead? [cycle other-cycles]
+(defn dead? [cycle cycles]
   (or
-   (nil? cycle)
    (hit-wall? cycle)
-   (hit-cycle? cycle other-cycles)))
+   (hit-trail? cycle cycles)))
 
 (defn turn [{[cur-pt prev-pt & _] :trail :as cycle} new-dir]
   (let [new-pt (add-points new-dir cur-pt)]
@@ -54,26 +53,20 @@
 	(assoc cycle :dir new-dir))))
 
 ;; mutable state ahead
-(defn reset-game [p1 p2]
-  (dosync
-   (ref-set p1 (create-p1))
-   (ref-set p2 (create-p2))))
+(defn reset-game [cycles-ref]
+  (dosync (ref-set cycles-ref (create-cycles))))
 
-(defn update-direction [cycle new-dir]
-  (dosync (alter cycle turn new-dir)))
+(defn update-direction [cycles-ref name new-dir]
+  (let [old-cycle (first (filter #(= name (:name %)) @cycles-ref))
+	new-cycle (turn old-cycle new-dir)
+	replace-cycle (partial replace {old-cycle new-cycle})]
+    (dosync (alter cycles-ref replace-cycle))))
 
-(defn update-positions [cycle-refs]
-  (dosync
-   (doseq [cycle-ref cycle-refs]
-     (if @cycle-ref (alter cycle-ref move)))))
+(defn update-positions [cycles-ref]
+  (let [move-all (partial map move)]
+    (dosync (alter cycles-ref move-all))))
 
-(defn dead-ref? [cycle-ref other-cycle-refs]
-  (dead? @cycle-ref (map deref other-cycle-refs)))
-
-(defn remove-dead [cycle-refs]
-  (dosync
-   (let [get-other-refs #(disj (set cycle-refs) %)
-	 pair-fn #(list % (dead-ref? % (get-other-refs %)))
-	 pairs (map pair-fn cycle-refs)]
-     (doseq [[cycle-ref dead] pairs]
-       (if dead (ref-set cycle-ref nil))))))
+(defn clear-dead [cycles-ref]
+  (let [cycles @cycles-ref
+	remove-dead (partial remove #(dead? % cycles))]
+    (dosync (alter cycles-ref remove-dead))))

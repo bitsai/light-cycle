@@ -33,29 +33,28 @@
 
 (defn paint-hits [g cycles]
   (doseq [{[pt & _] :trail :as cycle} cycles]
-    (let [other-cycles (disj (set cycles) cycle)]
-      (if (hit-cycle? cycle other-cycles) (fill-point g pt white)))))
+    (if (hit-trail? cycle cycles) (fill-point g pt white))))
 
-(defn game-panel [frame win-fn p1 p2]
+(defn game-panel [frame win-fn cycles-ref]
   (proxy [JPanel ActionListener KeyListener] []
     (paintComponent [g]
 		    (proxy-super paintComponent g)
-		    (paint-cycles g [@p1 @p2])
-		    (paint-hits g [@p1 @p2]))
+		    (paint-cycles g @cycles-ref)
+		    (paint-hits g @cycles-ref))
     (actionPerformed [e]
-		     (remove-dead [p1 p2])
-		     (update-positions [p1 p2])
-		     (let [win-msg (win-fn [@p1 @p2])]
+		     (clear-dead cycles-ref)
+		     (update-positions cycles-ref)
+		     (let [win-msg (win-fn @cycles-ref)]
 		       (when win-msg
-			 (reset-game p1 p2)
+			 (reset-game cycles-ref)
 			 (JOptionPane/showMessageDialog frame win-msg)))
 		     (.repaint this))
     (keyPressed [e]
 		(let [p1-dir (p1-dirs (.getKeyCode e))
 		      p2-dir (p2-dirs (.getKeyCode e))]
 		  (cond
-		   (and @p1 p1-dir) (update-direction p1 p1-dir)
-		   (and @p2 p2-dir) (update-direction p2 p2-dir))))
+		   p1-dir (update-direction cycles-ref "Player 1" p1-dir)
+		   p2-dir (update-direction cycles-ref "Player 2" p2-dir))))
     (getPreferredSize []
 		      (Dimension. (* (inc width) point-size)
 				  (* (inc height) point-size)))
@@ -63,10 +62,9 @@
     (keyTyped [e])))
 
 (defn game [win-fn]
-  (let [p1 (ref (create-p1))
-	p2 (ref (create-p2))
+  (let [cycles-ref (ref (create-cycles))
 	frame (JFrame. "Light Cycle")
-	panel (game-panel frame win-fn p1 p2)
+	panel (game-panel frame win-fn cycles-ref)
 	timer (Timer. turn-millis panel)]
     (doto panel
       (.addKeyListener panel)
@@ -78,4 +76,4 @@
       (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
       (.setVisible true))
     (.start timer)
-    [p1 p2 timer]))
+    [cycles-ref timer]))
