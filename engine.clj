@@ -40,7 +40,7 @@
   (let [other-cycles (disj (set cycles) cycle)
 	other-trails (mapcat :trail other-cycles)
 	trails (concat trail other-trails)]
-    (some #(= pt %) trails)))
+    (some #{pt} trails)))
 
 (defn dead? [cycle cycles]
   (or
