@@ -1,6 +1,7 @@
 A simple TRON light cycle game in Clojure, based on the Snake example in Programming Clojure:
 http://pragprog.com/titles/shcloj/programming-clojure
 
-Currently it's a 2-player adversarial game:
+Current gameplay is Free-For-All between 2 humans and 2 bots:
 - Player 1 controls the yellow light cycle using WASD.
 - Player 2 controls the blue light cycle using the arrow keys.
+- Bots will randomly choose an open square, with a bias for going straight.

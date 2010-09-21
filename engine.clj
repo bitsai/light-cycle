@@ -8,26 +8,19 @@
 
 (def black (Color. 0 0 0))
 (def blue (Color. 0 0 255))
+(def red (Color. 255 0 0))
 (def yellow (Color. 255 255 0))
 (def white (Color. 255 255 255))
 
 (defn add-points [& pts]
   (vec (apply map + pts)))
 
-(defn create-cycle [name pt dir color]
+(defn create-cycle [name pt dir color move-fn]
   {:name name
    :trail [pt]
    :dir dir
-   :color color})
-
-(defn create-cycles []
-  [(create-cycle "Player 1" [37 50] [0 -1] yellow)
-   (create-cycle "Player 2" [37 0] [0 1] blue)])
-
-(defn move [{:keys [trail dir] :as cycle}]
-  (let [new-pt (add-points dir (first trail))
-	new-trail (cons new-pt trail)]
-    (assoc cycle :trail new-trail)))
+   :color color
+   :move-fn move-fn})
 
 (defn hit-wall? [{[[x y] & _] :trail}]
   (or
@@ -52,6 +45,25 @@
     (if (= new-pt prev-pt) cycle
 	(assoc cycle :dir new-dir))))
 
+(defn move [{:keys [trail dir] :as cycle} cycles]
+  (let [new-pt (add-points dir (first trail))
+	new-trail (cons new-pt trail)]
+    (assoc cycle :trail new-trail)))
+
+(defn move-random [cycle cycles]
+  (let [dirs [[0 -1] [-1 0] [0 1] [1 0]]
+	biased-dirs (concat dirs (repeat 8 (:dir cycle)))
+	next-moves (map #(move (turn cycle %) cycles) biased-dirs)
+	valid-moves (remove #(dead? % cycles) next-moves)]
+    (if (not (empty? valid-moves)) (rand-nth valid-moves)
+	(move cycle cycles))))
+
+(defn create-cycles []
+  [(create-cycle "Player 1" [37 50] [0 -1] yellow move)
+   (create-cycle "Player 2" [37 0] [0 1] blue move)
+   (create-cycle "Rand 1" [0 24] [1 0] red move-random)
+   (create-cycle "Rand 2" [75 24] [-1 0] red move-random)])
+
 ;; mutable state ahead
 (defn reset-game [cycles-ref]
   (dosync (ref-set cycles-ref (create-cycles))))
@@ -63,8 +75,9 @@
     (dosync (alter cycles-ref replace-cycle))))
 
 (defn update-positions [cycles-ref]
-  (let [move-all (partial map move)]
-    (dosync (alter cycles-ref move-all))))
+  (let [cycles @cycles-ref
+	apply-move-fns (partial map #((:move-fn %) % cycles))]
+    (dosync (alter cycles-ref apply-move-fns))))
 
 (defn clear-dead [cycles-ref]
   (let [cycles @cycles-ref
