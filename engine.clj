@@ -50,10 +50,12 @@
 	new-trail (cons new-pt trail)]
     (assoc cycle :trail new-trail)))
 
+;; AI bot move function
 (defn move-random [cycle cycles]
   (let [dirs [[0 -1] [-1 0] [0 1] [1 0]]
 	biased-dirs (concat dirs (repeat 8 (:dir cycle)))
-	next-moves (map #(move (turn cycle %) cycles) biased-dirs)
+	make-move #(move (turn cycle %) cycles)
+	next-moves (map make-move biased-dirs)
 	valid-moves (remove #(dead? % cycles) next-moves)]
     (if (not (empty? valid-moves)) (rand-nth valid-moves)
 	(move cycle cycles))))
