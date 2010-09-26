@@ -57,8 +57,8 @@
 	make-move #(move (turn cycle %) cycles)
 	next-moves (map make-move biased-dirs)
 	valid-moves (remove #(dead? % cycles) next-moves)]
-    (if (not (empty? valid-moves)) (rand-nth valid-moves)
-	(move cycle cycles))))
+    (if-not (empty? valid-moves) (rand-nth valid-moves)
+	    (move cycle cycles))))
 
 (defn create-cycles []
   [(create-cycle "Player 1" [37 50] [0 -1] yellow move)
