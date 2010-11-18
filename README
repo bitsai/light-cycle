@@ -7,5 +7,5 @@ Current gameplay is Free-For-All between 2 humans and 2 bots:
 - Player 2 controls the blue light cycle using the arrow keys.
 - Right now, the bots are not very smart.  They simply choose a random open adjacent square, with a bias for going straight if possible.
 
-To start the game, assuming . is on the class path, just run light-cycle.clj:
-clj light-cycle.clj
+To start the game, assuming . is on the class path, just run light_cycle.clj:
+clj light_cycle.clj
