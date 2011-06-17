@@ -1,4 +1,4 @@
-A simple TRON light cycle game in Clojure, inspired by the Snake example in Programming Clojure and Google's Tron AI Challenge:
+A simple Tron light cycle game in Clojure, inspired by the Snake example in Programming Clojure and Google's Tron AI Challenge:
 http://pragprog.com/titles/shcloj/programming-clojure
 http://csclub.uwaterloo.ca/contest/
 
