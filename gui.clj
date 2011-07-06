@@ -2,21 +2,17 @@
   (:use [engine])
   (:import (java.awt Dimension)
 	   (java.awt.event ActionListener KeyListener)
-	   (javax.swing JFrame JOptionPane JPanel Timer))
-  (:use clojure.contrib.import-static))
+	   (javax.swing JFrame JOptionPane JPanel Timer)))
 
-(import-static java.awt.event.KeyEvent
-	       VK_W VK_A VK_S VK_D
-	       VK_UP VK_LEFT VK_DOWN VK_RIGHT)
+(def p1-dirs {java.awt.event.KeyEvent/VK_W [ 0 -1]
+	      java.awt.event.KeyEvent/VK_A [-1  0]
+	      java.awt.event.KeyEvent/VK_S [ 0  1]
+	      java.awt.event.KeyEvent/VK_D [ 1  0]})
 
-(def p1-dirs {VK_W [ 0 -1]
-	      VK_A [-1  0]
-	      VK_S [ 0  1]
-	      VK_D [ 1  0]})
-(def p2-dirs {VK_UP    [ 0 -1]
-	      VK_LEFT  [-1  0]
-	      VK_DOWN  [ 0  1]
-	      VK_RIGHT [ 1  0]})
+(def p2-dirs {java.awt.event.KeyEvent/VK_UP    [ 0 -1]
+	      java.awt.event.KeyEvent/VK_LEFT  [-1  0]
+	      java.awt.event.KeyEvent/VK_DOWN  [ 0  1]
+	      java.awt.event.KeyEvent/VK_RIGHT [ 1  0]})
 
 (defn point-to-screen-rect [[x y]]
   (map #(* point-size %) [x y 1 1]))
