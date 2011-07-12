@@ -1,18 +1,18 @@
 (ns gui
   (:use [engine])
   (:import (java.awt Dimension)
-	   (java.awt.event ActionListener KeyListener)
+	   (java.awt.event ActionListener KeyEvent KeyListener)
 	   (javax.swing JFrame JOptionPane JPanel Timer)))
 
-(def p1-dirs {java.awt.event.KeyEvent/VK_W [ 0 -1]
-	      java.awt.event.KeyEvent/VK_A [-1  0]
-	      java.awt.event.KeyEvent/VK_S [ 0  1]
-	      java.awt.event.KeyEvent/VK_D [ 1  0]})
+(def p1-dirs {KeyEvent/VK_W [ 0 -1]
+	      KeyEvent/VK_A [-1  0]
+	      KeyEvent/VK_S [ 0  1]
+	      KeyEvent/VK_D [ 1  0]})
 
-(def p2-dirs {java.awt.event.KeyEvent/VK_UP    [ 0 -1]
-	      java.awt.event.KeyEvent/VK_LEFT  [-1  0]
-	      java.awt.event.KeyEvent/VK_DOWN  [ 0  1]
-	      java.awt.event.KeyEvent/VK_RIGHT [ 1  0]})
+(def p2-dirs {KeyEvent/VK_UP    [ 0 -1]
+	      KeyEvent/VK_LEFT  [-1  0]
+	      KeyEvent/VK_DOWN  [ 0  1]
+	      KeyEvent/VK_RIGHT [ 1  0]})
 
 (defn point-to-screen-rect [[x y]]
   (map #(* point-size %) [x y 1 1]))
